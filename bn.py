@@ -34,8 +34,12 @@ def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:
             lprobs[label] = np.sum([jprobs[label] for label in jprobs]) / jprobs[label]
     return lprobs
 
-def categorize_binary(col:pd.Series, labels:list) -> pd.Series:
-    return pd.cut(col, [col.min()-1, col.median(), col.max()], labels=labels)
+def categorize_binary(col:pd.Series, labels:list, bins:list) -> pd.Series:
+    if len(bins) != 3:
+        return pd.cut(col, [col.min()-1, col.median(), col.max()], labels=labels)
+    else:
+        return pd.cut(col, bins, labels=labels)
+
 
 bn = {
         'sexo': ['peso', 'estatura', 'pie'],
@@ -46,18 +50,26 @@ bn = {
 
 labels = {
         'sexo': ['hombre', 'mujer'],
-        'peso': ['ligero', 'pesado'],
         'estatura': ['baja', 'alta'],
-        'pie': ['chico', 'grande']
+#        'edad': ['joven', 'viejo']
+        'pie': ['chico', 'grande'],
+#        'brazo': ['corto', 'largo'],
+#        'espalda': ['delgada', 'robusta'],
+#        'craneo': ['chico', 'grande'],
+        'peso': ['ligero', 'pesado']
         }
 
 df = pd.read_csv('dataset.csv')
 
 df = df.drop(['edad', 'brazo', 'espalda', 'craneo'], axis=1)
 
-df['estatura'] = categorize_binary(df['estatura'], labels['estatura'])
-df['peso'] = categorize_binary(df['peso'], labels['peso'])
-df['pie'] = categorize_binary(df['pie'], labels['pie'])
+df['estatura'] = categorize_binary(df['estatura'], labels['estatura'], [120, 170, 200])
+# df['edad'] = categorize_binary(df['edad'], labels['edad'], [1, 35, 100])
+df['pie'] = categorize_binary(df['pie'], labels['pie'], [15, 24, 30])
+# df['brazo'] = categorize_binary(df['brazo'], labels['brazo'], [45, 60, 75])
+# df['espalda'] = categorize_binary(df['espalda'], labels['espalda'], [30, 45, 60])
+# df['craneo'] = categorize_binary(df['craneo'], labels['craneo'], [45, 54, 60])
+df['peso'] = categorize_binary(df['peso'], labels['peso'], [25, 70, 110])
 
 # Test
 print(get_class_probs(df, 'sexo', {'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn, labels))

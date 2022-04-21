@@ -17,6 +17,13 @@ bn = {
         'pie': []
         }
 
+labels = {
+        'sexo': ['hombre', 'mujer'],
+        'peso': ['ligero', 'pesado'],
+        'estatura': ['baja', 'alta'],
+        'pie': ['chico', 'grande']
+        }
+
 def prob_cond_dep(df:pd.DataFrame, feature:str, label:str, deps:dict) -> float:
     subdf = df.copy() # TODO: test if needed
     for dep in deps:
@@ -36,9 +43,18 @@ def prob_conj(df:pd.DataFrame, values:dict, bn:dict) -> float:
     print(probs)
     return prod(probs)
 
-r = prob_conj(df, {'sexo':'hombre', 'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn)
-print(r)
+def class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:dict) -> dict:
+    class_probs_conj = {}
+    class_probs = {}
+    for label in labels[class_ft]:
+        sample[class_ft] = label
+        class_probs_conj[label] = prob_conj(df, sample, bn)
+    for label in labels[class_ft]:
+        if class_probs_conj[label] == 0:
+            class_probs[label] = 0.0
+        else:
+            class_probs[label] = sum([class_probs_conj[label] for label in class_probs_conj]) / class_probs_conj[label]
+    return class_probs
 
-# def get_class(df:pd.DataFrame, class_ft:str, ) -> str:
-    # get_prob_cond()
-
+# Test
+print(class_probs(df, 'sexo', {'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn, labels))

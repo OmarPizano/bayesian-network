@@ -1,6 +1,40 @@
 import pandas as pd
 from numpy import prod
 
+def label_prob(df:pd.DataFrame, feature:str, label:str, deps:dict) -> float:
+    subdf = df.copy()
+    for dep in deps:
+        subdf = subdf[subdf[dep] == deps[dep]]
+    ocurrences = subdf.groupby(feature).size().get(label)
+    if ocurrences == None:
+        return 0.0
+    return ocurrences / float(len(subdf)) # p(x|deps) = p(deps|x) / p(deps)
+
+def joint_prob(df:pd.DataFrame, values:dict, bn:dict) -> float:
+    probs = []
+    for node in bn:
+        deps = {}
+        for dep in bn[node]:
+            deps[dep] = values[dep]
+        probs.append(label_prob(df, node, values[node], deps)) 
+    #print(probs)
+    return prod(probs) # p(x1,x2,..xn) = p(x1|deps) * p(x2|deps) * ... * p(xn|deps)
+
+def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:dict) -> dict:
+    jprobs = {} # joint probs
+    lprobs = {} # final probs
+    for label in labels[class_ft]:
+        sample[class_ft] = label # we need current label in the sample to compute joint prob
+        jprobs[label] = joint_prob(df, sample, bn)
+    for label in labels[class_ft]:
+        if jprobs[label] == 0:
+            lprobs[label] = 0.0
+        else:
+            # p(class1|sample) = ( p(class1,sample) + p(class2,sample) ) / p(class1,sample)
+            lprobs[label] = sum([jprobs[label] for label in jprobs]) / jprobs[label]
+    return lprobs
+
+
 df = pd.read_csv('dataset.csv')
 
 df = df.drop(['edad', 'brazo', 'espalda', 'craneo'], axis=1)
@@ -24,37 +58,5 @@ labels = {
         'pie': ['chico', 'grande']
         }
 
-def prob_cond_dep(df:pd.DataFrame, feature:str, label:str, deps:dict) -> float:
-    subdf = df.copy() # TODO: test if needed
-    for dep in deps:
-        subdf = subdf[subdf[dep] == deps[dep]]
-    ocurrences = subdf.groupby(feature).size().get(label)
-    if ocurrences == None:
-        return 0.0
-    return ocurrences / float(len(subdf))
-
-def prob_conj(df:pd.DataFrame, values:dict, bn:dict) -> float:
-    probs = []
-    for node in bn:
-        deps = {}
-        for dep in bn[node]:
-            deps[dep] = values[dep]
-        probs.append(prob_cond_dep(df, node, values[node], deps)) 
-    print(probs)
-    return prod(probs)
-
-def class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:dict) -> dict:
-    class_probs_conj = {}
-    class_probs = {}
-    for label in labels[class_ft]:
-        sample[class_ft] = label
-        class_probs_conj[label] = prob_conj(df, sample, bn)
-    for label in labels[class_ft]:
-        if class_probs_conj[label] == 0:
-            class_probs[label] = 0.0
-        else:
-            class_probs[label] = sum([class_probs_conj[label] for label in class_probs_conj]) / class_probs_conj[label]
-    return class_probs
-
 # Test
-print(class_probs(df, 'sexo', {'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn, labels))
+print(get_class_probs(df, 'sexo', {'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn, labels))

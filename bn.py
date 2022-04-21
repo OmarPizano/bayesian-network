@@ -34,15 +34,8 @@ def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:
             lprobs[label] = sum([jprobs[label] for label in jprobs]) / jprobs[label]
     return lprobs
 
-
-df = pd.read_csv('dataset.csv')
-
-df = df.drop(['edad', 'brazo', 'espalda', 'craneo'], axis=1)
-
-# TODO: put this in a function
-df['estatura'] = pd.cut(df['estatura'], [0, 160, 180], labels=['baja', 'alta'])
-df['pie'] = pd.cut(df['pie'], [20, 24, 30], labels=['chico', 'grande'])
-df['peso'] = pd.cut(df['peso'], [25, 60, 110], labels=['ligero', 'pesado'])
+def categorize_binary(col:pd.Series, labels:list) -> pd.Series:
+    return pd.cut(col, [col.min()-1, col.median(), col.max()], labels=labels)
 
 bn = {
         'sexo': ['peso', 'estatura', 'pie'],
@@ -57,6 +50,14 @@ labels = {
         'estatura': ['baja', 'alta'],
         'pie': ['chico', 'grande']
         }
+
+df = pd.read_csv('dataset.csv')
+
+df = df.drop(['edad', 'brazo', 'espalda', 'craneo'], axis=1)
+
+df['estatura'] = categorize_binary(df['estatura'], labels['estatura'])
+df['peso'] = categorize_binary(df['peso'], labels['peso'])
+df['pie'] = categorize_binary(df['pie'], labels['pie'])
 
 # Test
 print(get_class_probs(df, 'sexo', {'estatura':'alta', 'peso':'pesado', 'pie':'grande'}, bn, labels))

@@ -1,5 +1,5 @@
 import pandas as pd
-from numpy import prod
+import numpy as np
 
 def label_prob(df:pd.DataFrame, feature:str, label:str, deps:dict) -> float:
     subdf = df.copy()
@@ -18,7 +18,7 @@ def joint_prob(df:pd.DataFrame, values:dict, bn:dict) -> float:
             deps[dep] = values[dep]
         probs.append(label_prob(df, node, values[node], deps)) 
     #print(probs)
-    return prod(probs) # p(x1,x2,..xn) = p(x1|deps) * p(x2|deps) * ... * p(xn|deps)
+    return np.prod(probs) # p(x1,x2,..xn) = p(x1|deps) * p(x2|deps) * ... * p(xn|deps)
 
 def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:dict) -> dict:
     jprobs = {} # joint probs
@@ -31,7 +31,7 @@ def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:
             lprobs[label] = 0.0
         else:
             # p(class1|sample) = ( p(class1,sample) + p(class2,sample) ) / p(class1,sample)
-            lprobs[label] = sum([jprobs[label] for label in jprobs]) / jprobs[label]
+            lprobs[label] = np.sum([jprobs[label] for label in jprobs]) / jprobs[label]
     return lprobs
 
 def categorize_binary(col:pd.Series, labels:list) -> pd.Series:

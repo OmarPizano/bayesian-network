@@ -32,6 +32,7 @@ def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:
         else:
             # p(class1|sample) = ( p(class1,sample) + p(class2,sample) ) / p(class1,sample)
             lprobs[label] = np.sum([jprobs[label] for label in jprobs]) / jprobs[label]
+            lprobs[label] = jprobs[label] / np.sum([jprobs[label] for label in jprobs])
     return lprobs
 
 def categorize_binary(col:pd.Series, labels:list, bins:list) -> pd.Series:

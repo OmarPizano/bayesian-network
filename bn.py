@@ -17,7 +17,7 @@ def joint_prob(df:pd.DataFrame, values:dict, bn:dict) -> float:
         for dep in bn[node]:
             deps[dep] = values[dep]
         probs.append(label_prob(df, node, values[node], deps)) 
-    print(probs)
+    #print(probs)
     return np.prod(probs) # p(x1,x2,..xn) = p(x1|deps) * p(x2|deps) * ... * p(xn|deps)
 
 def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:dict) -> dict:

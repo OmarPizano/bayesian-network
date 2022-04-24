@@ -30,8 +30,7 @@ def get_class_probs(df:pd.DataFrame, class_ft:str, sample:dict, bn:dict, labels:
         if jprobs[label] == 0:
             lprobs[label] = 0.0
         else:
-            # p(class1|sample) = ( p(class1,sample) + p(class2,sample) ) / p(class1,sample)
-            lprobs[label] = np.sum([jprobs[label] for label in jprobs]) / jprobs[label]
+            # p(class1|sample) = p(class1,sample) / ( p(class1,sample) + p(class2,sample) )
             lprobs[label] = jprobs[label] / np.sum([jprobs[label] for label in jprobs])
     return lprobs
 
